@@ -1,0 +1,44 @@
+name: CI & Build webOS IPK
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Verify Backend Integrity
+        run: |
+          node -e "require('./backend/resolver.js'); console.log('Resolver module loaded successfully');"
+          node -e "require('./backend/server.js'); console.log('Server module loaded successfully');" --check
+
+      - name: Setup LG webOS ares-cli tools
+        run: |
+          npm install -g @webosbrew/ares-cli
+          mkdir -p dist
+
+      - name: Package webOS Application (.ipk)
+        run: |
+          ares-package public -o dist
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fusion-tv-webos-package
+          path: dist/*.ipk
