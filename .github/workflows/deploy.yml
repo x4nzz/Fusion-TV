@@ -27,9 +27,9 @@ jobs:
           node -e "require('./backend/resolver.js'); console.log('Resolver module loaded successfully');"
           node -e "require('./backend/server.js'); console.log('Server module loaded successfully');"
 
-      - name: Setup LG webOS ares-cli tools
+            - name: Setup LG webOS ares-cli tools
         run: |
-          npm install -g @webosbrew/ares-cli
+          npm install -g @webos-tools/cli
           mkdir -p dist
 
       - name: Package webOS Application (.ipk)
