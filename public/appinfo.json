@@ -1,0 +1,17 @@
+{
+  "id": "com.fusion.tv",
+  "version": "2.4.0",
+  "vendor": "Fusion Media Labs",
+  "type": "web",
+  "main": "index.html",
+  "title": "Fusion TV",
+  "icon": "icon.png",
+  "largeIcon": "icon.png",
+  "uiRevision": "2",
+  "supportTouchMode": true,
+  "requiredPermissions": [
+    "network"
+  ],
+  "resolution": "1920x1080",
+  "handlesRelaunch": true
+}
