@@ -156,11 +156,15 @@ app.get('/api/resolve', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`===============================================`);
-  console.log(`  Fusion TV Backend is running`);
-  console.log(`  Local URL:  http://localhost:${PORT}`);
-  console.log(`  Remote URL: http://<LAN_IP_ADDRESS>:${PORT}`);
-  console.log(`  Ready for LG webOS TV Client connections`);
-  console.log(`===============================================`);
-});
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`===============================================`);
+    console.log(`  Fusion TV Backend is running`);
+    console.log(`  Local URL:  http://localhost:${PORT}`);
+    console.log(`  Remote URL: http://<LAN_IP_ADDRESS>:${PORT}`);
+    console.log(`  Ready for LG webOS TV Client connections`);
+    console.log(`===============================================`);
+  });
+}
+
+module.exports = app;
