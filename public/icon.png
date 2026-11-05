@@ -1,0 +1,2 @@
+# Optional: Generates a minimal 80x80 dark PNG placeholder for webOS icon
+echo "iVBORw0KGgoAAAANSUhEUgAAAFAAAABQAQMAAAC0BiDZAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAADlJREFUOMtjYBgFo2AUjIJRMApGAbUBNz9Awf9nIPD//wMI/j8AwefPnz9w+N/B/38wBf//j64fBQMDABN/Ea3s5sWIAAAAAElFTkSuQmCC" | base64 -d > public/icon.png
