@@ -18,14 +18,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Verify Backend Integrity
         run: |
           node -e "require('./backend/resolver.js'); console.log('Resolver module loaded successfully');"
-          node -e "require('./backend/server.js'); console.log('Server module loaded successfully');" --check
+          node -e "require('./backend/server.js'); console.log('Server module loaded successfully');"
 
       - name: Setup LG webOS ares-cli tools
         run: |
