@@ -6,30 +6,31 @@
   <title>Fusion TV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     /* ==========================================================================
-       DESIGN TOKENS & RESET (Optimized for 10-Foot 1080p / 4K OLED webOS UI)
+       DESIGN TOKENS & RESET (Optimized for 10-Foot 1080p / 4K OLED Smart TV UI)
        ========================================================================== */
     :root {
       --bg-void: #07080a;
-      --bg-surface: rgba(22, 24, 31, 0.75);
-      --bg-card: rgba(255, 255, 255, 0.05);
-      --bg-glass: rgba(18, 20, 26, 0.7);
-      --border-glass: rgba(255, 255, 255, 0.1);
+      --bg-surface: rgba(20, 22, 28, 0.88);
+      --bg-surface-elevated: rgba(28, 32, 42, 0.95);
+      --bg-card: #12141a;
+      --bg-glass: rgba(18, 20, 26, 0.78);
+      --border-glass: rgba(255, 255, 255, 0.12);
       
       --accent-white: #ffffff;
       --accent-highlight: #3b82f6;
       --text-primary: #f5f6f8;
-      --text-secondary: rgba(245, 246, 248, 0.62);
-      --text-muted: rgba(245, 246, 248, 0.38);
+      --text-secondary: rgba(245, 246, 248, 0.70);
+      --text-muted: rgba(245, 246, 248, 0.44);
 
-      --focus-glow: rgba(255, 255, 255, 0.3);
+      --focus-glow: rgba(255, 255, 255, 0.35);
       --focus-ring: #ffffff;
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 22px;
+      --radius-sm: 10px;
+      --radius-md: 18px;
+      --radius-lg: 26px;
       --radius-full: 9999px;
 
       --ease-tv: cubic-bezier(0.16, 1, 0.3, 1);
@@ -52,35 +53,40 @@
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       line-height: 1.4;
       position: relative;
-      cursor: none; /* Hide default pointer for native TV D-Pad feel */
+      cursor: none;
     }
 
-    /* Ambient Dynamic Backdrop */
+    /* Ambient Dual-Layer Crossfade Backdrop (Hardware Accelerated) */
     .ambient-container {
       position: absolute;
       inset: 0;
       z-index: 0;
       pointer-events: none;
       overflow: hidden;
+      transform: translate3d(0, 0, 0);
     }
 
-    .ambient-backdrop {
+    .ambient-layer {
       position: absolute;
-      inset: -50px;
+      inset: -40px;
       background-size: cover;
       background-position: center 25%;
-      filter: blur(54px) brightness(0.24) saturate(1.45);
-      transition: opacity 0.85s var(--ease-tv), transform 1.2s var(--ease-tv);
+      filter: blur(36px) brightness(0.26) saturate(1.4);
+      transition: opacity 0.45s var(--ease-tv);
+      opacity: 0;
+      transform: translate3d(0, 0, 0) scale(1.04);
+      will-change: opacity;
+    }
+
+    .ambient-layer.visible {
       opacity: 1;
-      transform: scale(1.05);
-      will-change: opacity, transform;
     }
 
     .ambient-overlay {
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 75% 25%, transparent 10%, rgba(7, 8, 10, 0.82) 65%, var(--bg-void) 100%),
-                  linear-gradient(to bottom, rgba(7, 8, 10, 0.35) 0%, rgba(7, 8, 10, 0.95) 75%, var(--bg-void) 100%);
+      background: radial-gradient(circle at 80% 20%, transparent 15%, rgba(7, 8, 10, 0.78) 60%, var(--bg-void) 100%),
+                  linear-gradient(to bottom, rgba(7, 8, 10, 0.35) 0%, rgba(7, 8, 10, 0.88) 65%, var(--bg-void) 100%);
     }
 
     /* ==========================================================================
@@ -91,32 +97,32 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 100px;
+      height: 120px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 80px;
+      padding: 0 90px;
       z-index: 50;
-      background: linear-gradient(to bottom, rgba(7,8,10,0.88) 0%, rgba(7,8,10,0) 100%);
+      background: linear-gradient(to bottom, rgba(7, 8, 10, 0.94) 0%, rgba(7, 8, 10, 0) 100%);
     }
 
     .brand-logo {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 26px;
+      gap: 14px;
+      font-size: 32px;
       font-weight: 800;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.6px;
       text-transform: uppercase;
       color: #fff;
     }
 
     .brand-badge {
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 800;
       letter-spacing: 1.5px;
-      background: rgba(255, 255, 255, 0.15);
-      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.16);
+      padding: 5px 10px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-glass);
     }
@@ -124,39 +130,39 @@
     .nav-pill-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 14px;
       background: var(--bg-glass);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      padding: 6px 8px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 8px 12px;
       border-radius: var(--radius-full);
       border: 1px solid var(--border-glass);
     }
 
     .nav-item {
-      padding: 10px 24px;
-      font-size: 16px;
-      font-weight: 600;
+      padding: 12px 28px;
+      font-size: 19px;
+      font-weight: 700;
       color: var(--text-secondary);
       border-radius: var(--radius-full);
-      transition: all 0.25s var(--ease-tv);
+      transition: transform 0.25s var(--ease-tv), background-color 0.25s var(--ease-tv), color 0.25s var(--ease-tv);
       border: 2px solid transparent;
     }
 
     .nav-item.active {
       color: #fff;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .nav-clock {
-      font-size: 17px;
-      font-weight: 600;
+      font-size: 20px;
+      font-weight: 700;
       color: var(--text-secondary);
       letter-spacing: 0.5px;
     }
 
     /* ==========================================================================
-       VIEWPORT & CANVAS TRANSLATION
+       VIEWPORT & CANVAS SCROLLING
        ========================================================================== */
     .viewport {
       position: absolute;
@@ -173,77 +179,78 @@
       top: 0;
       left: 0;
       width: 100%;
-      transition: transform 0.45s var(--ease-tv);
+      transition: transform 0.35s var(--ease-tv);
       will-change: transform;
+      transform: translate3d(0, 0, 0);
     }
 
     /* ==========================================================================
        HERO SPOTLIGHT BANNER
        ========================================================================== */
     .hero-section {
-      height: 640px;
-      padding: 120px 80px 0 80px;
+      height: 600px;
+      padding: 140px 90px 0 90px;
       display: flex;
       align-items: flex-end;
       position: relative;
     }
 
     .hero-content {
-      max-width: 840px;
+      max-width: 960px;
       z-index: 2;
     }
 
     .hero-meta-row {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
     .badge-pill {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
       text-transform: uppercase;
-      padding: 4px 10px;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 6px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
       color: #fff;
     }
 
     .badge-pill.gold {
-      background: rgba(234, 179, 8, 0.18);
-      border-color: rgba(234, 179, 8, 0.4);
+      background: rgba(234, 179, 8, 0.22);
+      border-color: rgba(234, 179, 8, 0.5);
       color: #facc15;
     }
 
     .hero-title {
-      font-size: 60px;
+      font-size: 68px;
       font-weight: 800;
       line-height: 1.08;
-      letter-spacing: -1.5px;
-      margin-bottom: 16px;
-      text-shadow: 0 4px 24px rgba(0,0,0,0.8);
+      letter-spacing: -1.6px;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 28px rgba(0, 0, 0, 0.9);
     }
 
     .hero-synopsis {
-      font-size: 18px;
+      font-size: 21px;
       color: var(--text-secondary);
-      line-height: 1.5;
-      margin-bottom: 32px;
+      line-height: 1.55;
+      margin-bottom: 36px;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      max-width: 740px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      max-width: 860px;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
     }
 
     .hero-action-row {
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 22px;
     }
 
     /* Universal Buttons */
@@ -251,17 +258,15 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 16px 34px;
+      gap: 14px;
+      padding: 18px 40px;
       border-radius: var(--radius-md);
-      font-size: 17px;
+      font-size: 20px;
       font-weight: 700;
       border: 2px solid transparent;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.15);
       color: #fff;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      transition: all 0.25s var(--ease-tv);
+      transition: transform 0.25s var(--ease-tv), border-color 0.25s var(--ease-tv), background-color 0.25s var(--ease-tv);
     }
 
     .btn.btn-primary {
@@ -270,20 +275,20 @@
     }
 
     .btn svg {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       fill: currentColor;
     }
 
     /* ==========================================================================
-       MEDIA RAILS & CAROUSELS
+       MEDIA RAILS & CAROUSELS (10-Foot Proportions & Hardware Layers)
        ========================================================================== */
     .rails-stack {
-      padding-top: 24px;
-      padding-bottom: 140px;
+      padding-top: 36px;
+      padding-bottom: 160px;
       display: flex;
       flex-direction: column;
-      gap: 52px;
+      gap: 60px;
     }
 
     .rail-container {
@@ -291,22 +296,22 @@
     }
 
     .rail-header {
-      padding: 0 80px 18px 80px;
+      padding: 0 90px 22px 90px;
       display: flex;
       align-items: baseline;
-      gap: 16px;
+      gap: 18px;
     }
 
     .rail-title {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.4px;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
       color: #fff;
     }
 
     .rail-subtitle {
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 17px;
+      font-weight: 600;
       color: var(--text-muted);
     }
 
@@ -314,52 +319,54 @@
       position: relative;
       width: 100%;
       overflow: visible;
-      padding-left: 80px;
+      padding-left: 90px;
     }
 
     .rail-track {
       display: flex;
-      gap: 28px;
-      transition: transform 0.4s var(--ease-tv);
+      gap: 32px;
+      transition: transform 0.35s var(--ease-tv);
       will-change: transform;
+      transform: translate3d(0, 0, 0);
     }
 
-    /* Media Cards */
+    /* Media Cards - Scaled for Legibility at 10 Feet */
     .card {
       flex: 0 0 auto;
-      width: 220px;
-      height: 330px;
+      width: 270px;
+      height: 405px;
       border-radius: var(--radius-md);
       background-color: var(--bg-card);
       position: relative;
       overflow: hidden;
-      border: 2.5px solid transparent;
-      transition: transform 0.3s var(--ease-tv), border-color 0.3s var(--ease-tv), box-shadow 0.3s var(--ease-tv);
+      border: 3.5px solid transparent;
+      transition: transform 0.28s var(--ease-tv), border-color 0.28s var(--ease-tv), box-shadow 0.28s var(--ease-tv);
       will-change: transform;
+      contain: layout style;
     }
 
     .card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: inherit;
+      display: block;
+      background-color: #12141a;
     }
 
     .card .card-glow-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(7, 8, 10, 0.95) 0%, rgba(7, 8, 10, 0) 50%);
-      opacity: 0.85;
+      background: linear-gradient(to top, rgba(7, 8, 10, 0.96) 0%, rgba(7, 8, 10, 0.4) 38%, transparent 70%);
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      padding: 16px;
-      transition: opacity 0.25s ease;
+      padding: 22px;
+      pointer-events: none;
     }
 
     .card-title {
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 800;
       color: #fff;
       white-space: nowrap;
       overflow: hidden;
@@ -367,98 +374,112 @@
     }
 
     .card-subtitle {
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 600;
       color: var(--text-secondary);
-      margin-top: 3px;
+      margin-top: 5px;
     }
 
+    /* Landscape Card Option */
     .card.landscape {
-      width: 380px;
-      height: 215px;
+      width: 480px;
+      height: 270px;
     }
 
     /* ==========================================================================
-       D-PAD FOCUS STATES (WebOS High-Contrast Rings & Dynamic Scaling)
+       D-PAD FOCUS STATES (WebOS High-Contrast Rings & Zero Thrashing)
        ========================================================================== */
     .focusable {
       outline: none;
     }
 
-    .focusable.focused {
+    .card.focusable.focused {
       z-index: 30;
       border-color: var(--focus-ring) !important;
-      transform: scale(1.08) translateY(-6px);
-      box-shadow: 0 20px 42px rgba(0, 0, 0, 0.95), 0 0 28px var(--focus-glow) !important;
+      transform: translate3d(0, -10px, 0) scale(1.06);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.95), 0 0 32px var(--focus-glow) !important;
     }
 
     .btn.focusable.focused {
-      transform: scale(1.08);
+      transform: translate3d(0, -4px, 0) scale(1.06);
       border-color: var(--focus-ring);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.88), 0 0 24px var(--focus-glow);
     }
 
     .nav-item.focusable.focused {
-      background: #ffffff;
-      color: #07080a;
-      transform: scale(1.06);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      background: #ffffff !important;
+      color: #07080a !important;
+      transform: translate3d(0, -2px, 0) scale(1.06);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
     }
 
     /* ==========================================================================
-       SETTINGS VIEW (Dedicated Screen with SVG Tabs)
+       SETTINGS VIEW (Dedicated Screen & Clean Tab Hierarchy)
        ========================================================================== */
     .settings-overlay {
       position: fixed;
       inset: 0;
       z-index: 90;
-      background: rgba(7, 8, 10, 0.92);
-      backdrop-filter: blur(40px);
-      -webkit-backdrop-filter: blur(40px);
+      background: rgba(7, 8, 10, 0.94);
       display: none;
-      padding: 120px 100px 80px 100px;
+      padding: 130px 100px 90px 100px;
       opacity: 0;
       transition: opacity 0.3s var(--ease-tv);
+      transform: translate3d(0, 0, 0);
     }
 
     .settings-overlay.active {
       display: flex;
       opacity: 1;
-      gap: 60px;
+      gap: 70px;
     }
 
     .settings-sidebar {
-      width: 360px;
+      width: 420px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
       border-right: 1px solid var(--border-glass);
-      padding-right: 40px;
+      padding-right: 50px;
     }
 
     .settings-tab-btn {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 16px 20px;
+      gap: 18px;
+      padding: 20px 26px;
       border-radius: var(--radius-md);
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 21px;
+      font-weight: 700;
       color: var(--text-secondary);
       background: transparent;
-      border: 2px solid transparent;
-      transition: all 0.25s var(--ease-tv);
+      border: 3px solid transparent;
+      transition: transform 0.2s var(--ease-tv), background-color 0.2s var(--ease-tv), border-color 0.2s var(--ease-tv);
     }
 
     .settings-tab-btn svg {
-      width: 22px;
-      height: 22px;
+      width: 28px;
+      height: 28px;
       fill: currentColor;
     }
 
+    /* Active Tab indicator */
     .settings-tab-btn.selected {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.12);
       color: #fff;
+    }
+
+    /* D-Pad Focus on Sidebar Tab */
+    .settings-tab-btn.focused {
+      border-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #07080a !important;
+      transform: translate3d(6px, 0, 0) scale(1.03);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+    }
+
+    .settings-tab-btn.focused svg {
+      fill: #07080a;
     }
 
     .settings-panel {
@@ -468,46 +489,53 @@
     }
 
     .settings-section-title {
-      font-size: 34px;
+      font-size: 42px;
       font-weight: 800;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
     .settings-section-desc {
-      font-size: 16px;
+      font-size: 19px;
       color: var(--text-secondary);
-      margin-bottom: 40px;
+      margin-bottom: 46px;
     }
 
     .settings-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 22px 28px;
+      padding: 26px 34px;
       border-radius: var(--radius-md);
       background: var(--bg-surface);
-      border: 2px solid transparent;
-      margin-bottom: 18px;
-      transition: all 0.25s var(--ease-tv);
+      border: 3px solid transparent;
+      margin-bottom: 22px;
+      transition: transform 0.2s var(--ease-tv), border-color 0.2s var(--ease-tv), background-color 0.2s var(--ease-tv);
+    }
+
+    .settings-row.focused {
+      border-color: #ffffff !important;
+      background: var(--bg-surface-elevated) !important;
+      transform: translate3d(0, -4px, 0) scale(1.02);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 20px var(--focus-glow);
     }
 
     .settings-row-label {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
     }
 
     .settings-row-sub {
-      font-size: 14px;
+      font-size: 16px;
       color: var(--text-muted);
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .settings-input-pill {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 8px 18px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 12px 24px;
       border-radius: var(--radius-full);
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 18px;
+      font-weight: 700;
       color: #fff;
     }
 
@@ -518,15 +546,13 @@
       position: fixed;
       inset: 0;
       z-index: 100;
-      background: rgba(7, 8, 10, 0.85);
-      backdrop-filter: blur(40px);
-      -webkit-backdrop-filter: blur(40px);
+      background: rgba(7, 8, 10, 0.88);
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.35s var(--ease-tv);
+      transition: opacity 0.3s var(--ease-tv);
     }
 
     .modal-overlay.active {
@@ -535,17 +561,17 @@
     }
 
     .modal-card {
-      width: 1600px;
-      height: 860px;
+      width: 1640px;
+      height: 880px;
       background: var(--bg-surface);
       border: 1px solid var(--border-glass);
       border-radius: var(--radius-lg);
       position: relative;
       overflow: hidden;
       display: flex;
-      box-shadow: 0 35px 70px rgba(0,0,0,0.95);
-      transform: scale(0.96);
-      transition: transform 0.35s var(--ease-tv);
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.95);
+      transform: scale(0.97);
+      transition: transform 0.3s var(--ease-tv);
     }
 
     .modal-overlay.active .modal-card {
@@ -560,49 +586,49 @@
       height: 100%;
       background-size: cover;
       background-position: center top;
-      mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
-      -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to left, rgba(0, 0, 0, 1) 35%, rgba(0, 0, 0, 0) 100%);
+      -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 1) 35%, rgba(0, 0, 0, 0) 100%);
       opacity: 0.55;
     }
 
     .modal-left-details {
       position: relative;
       z-index: 2;
-      width: 55%;
-      padding: 70px 80px;
+      width: 58%;
+      padding: 80px 90px;
       display: flex;
       flex-direction: column;
       justify-content: center;
     }
 
     .modal-title {
-      font-size: 52px;
+      font-size: 58px;
       font-weight: 800;
       line-height: 1.1;
-      margin-bottom: 20px;
-      letter-spacing: -1px;
+      margin-bottom: 22px;
+      letter-spacing: -1.2px;
     }
 
     .modal-meta-bar {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 24px;
+      gap: 16px;
+      margin-bottom: 26px;
     }
 
     .modal-overview {
-      font-size: 19px;
+      font-size: 22px;
       line-height: 1.6;
       color: var(--text-secondary);
-      margin-bottom: 36px;
-      max-height: 200px;
+      margin-bottom: 42px;
+      max-height: 220px;
       overflow: hidden;
     }
 
     .modal-actions {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 22px;
     }
 
     /* ==========================================================================
@@ -631,13 +657,13 @@
     .player-hud {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.8) 100%);
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.94) 0%, transparent 40%, transparent 60%, rgba(0, 0, 0, 0.85) 100%);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 50px 80px;
+      padding: 60px 90px;
       opacity: 1;
-      transition: opacity 0.4s var(--ease-tv);
+      transition: opacity 0.35s var(--ease-tv);
     }
 
     .player-hud.hidden {
@@ -652,25 +678,25 @@
     }
 
     .player-movie-info h2 {
-      font-size: 30px;
-      font-weight: 700;
+      font-size: 34px;
+      font-weight: 800;
     }
 
     .player-movie-info p {
-      font-size: 16px;
+      font-size: 18px;
       color: var(--text-secondary);
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .player-scrubber-box {
       width: 100%;
-      margin-bottom: 24px;
+      margin-bottom: 30px;
     }
 
     .progress-track-bg {
       width: 100%;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.2);
+      height: 10px;
+      background: rgba(255, 255, 255, 0.22);
       border-radius: var(--radius-full);
       position: relative;
     }
@@ -688,9 +714,9 @@
     .progress-time-row {
       display: flex;
       justify-content: space-between;
-      margin-top: 10px;
-      font-size: 15px;
-      font-weight: 600;
+      margin-top: 14px;
+      font-size: 17px;
+      font-weight: 700;
       color: var(--text-secondary);
     }
 
@@ -698,31 +724,31 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 28px;
+      gap: 32px;
     }
 
     .player-btn {
-      width: 60px;
-      height: 60px;
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.12);
-      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.15);
+      border: 3px solid transparent;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #fff;
-      transition: all 0.25s var(--ease-tv);
+      transition: transform 0.25s var(--ease-tv), border-color 0.25s var(--ease-tv);
     }
 
     .player-btn svg {
-      width: 26px;
-      height: 26px;
+      width: 30px;
+      height: 30px;
       fill: currentColor;
     }
 
     .player-btn.play-master {
-      width: 76px;
-      height: 76px;
+      width: 88px;
+      height: 88px;
       background: #ffffff;
       color: #07080a;
     }
@@ -730,35 +756,35 @@
     /* Toast Notification */
     .toast-pill {
       position: fixed;
-      top: 40px;
+      top: 45px;
       left: 50%;
-      transform: translateX(-50%) translateY(-100px);
-      background: rgba(22, 24, 31, 0.95);
+      transform: translate3d(-50%, -120px, 0);
+      background: rgba(22, 24, 31, 0.96);
       border: 1px solid var(--border-glass);
-      backdrop-filter: blur(25px);
-      padding: 14px 28px;
+      padding: 16px 36px;
       border-radius: var(--radius-full);
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 19px;
+      font-weight: 700;
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       z-index: 999;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-      transition: transform 0.4s var(--ease-tv);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+      transition: transform 0.35s var(--ease-tv);
     }
 
     .toast-pill.show {
-      transform: translateX(-50%) translateY(0);
+      transform: translate3d(-50%, 0, 0);
     }
   </style>
 </head>
 <body>
 
-  <!-- AMBIENT BACKDROP -->
+  <!-- AMBIENT DUAL-LAYER BACKDROP -->
   <div class="ambient-container">
-    <div id="ambientBackdrop" class="ambient-backdrop"></div>
+    <div id="ambientLayerA" class="ambient-layer visible"></div>
+    <div id="ambientLayerB" class="ambient-layer"></div>
     <div class="ambient-overlay"></div>
   </div>
 
@@ -818,7 +844,7 @@
 
   <!-- SETTINGS VIEW OVERLAY WITH FUNCTIONAL TABS -->
   <div class="settings-overlay" id="settingsOverlay">
-    <div class="settings-sidebar">
+    <div class="settings-sidebar" id="settingsSidebar">
       <!-- General Tab -->
       <button class="settings-tab-btn focusable selected" data-tab="general">
         <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
@@ -837,7 +863,7 @@
         Appearance
       </button>
 
-      <!-- Account / Sync Tab -->
+      <!-- Account Tab -->
       <button class="settings-tab-btn focusable" data-tab="account">
         <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         Account
@@ -851,9 +877,7 @@
     </div>
 
     <!-- Right Settings Panel -->
-    <div class="settings-panel" id="settingsPanelContent">
-      <!-- Dynamic Panel Contents Injected via JS -->
-    </div>
+    <div class="settings-panel" id="settingsPanelContent"></div>
   </div>
 
   <!-- DETAIL MODAL -->
@@ -929,12 +953,115 @@
     </div>
   </div>
 
-  <!-- APPLICATION LOGIC & SPATIAL ENGINE -->
+  <!-- APPLICATION LOGIC & OPTIMIZED SPATIAL ENGINE -->
   <script>
     const CONFIG = {
-      BACKEND_URL: 'http://localhost:3000', // Auto-points to local server or configure via Settings
-      REFRESH_INTERVAL: 60000
+      BACKEND_URL: 'http://localhost:3000',
+      REFRESH_INTERVAL: 60000,
+      PORTRAIT_STEP: 302,   // 270px width + 32px gap (Pre-calculated: zero layout thrashing)
+      LANDSCAPE_STEP: 512   // 480px width + 32px gap
     };
+
+    // Robust Inline SVG Generators for Zero-Latency Asset Fallbacks
+    function escapeXml(unsafe) {
+      return (unsafe || '').replace(/[<>&'"]/g, c => {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+        }
+      });
+    }
+
+    function createFallbackPoster(title) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900">
+        <defs>
+          <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1e2230"/>
+            <stop offset="60%" stop-color="#10121a"/>
+            <stop offset="100%" stop-color="#07080a"/>
+          </linearGradient>
+        </defs>
+        <rect width="600" height="900" fill="url(#bg)"/>
+        <circle cx="300" cy="400" r="110" fill="rgba(255,255,255,0.05)"/>
+        <polygon points="280,350 350,400 280,450" fill="#ffffff" opacity="0.4"/>
+        <text x="300" y="580" font-family="-apple-system, sans-serif" font-size="36" font-weight="800" fill="#ffffff" text-anchor="middle" opacity="0.9">${escapeXml(title || 'FUSION MEDIA')}</text>
+        <text x="300" y="630" font-family="-apple-system, sans-serif" font-size="22" font-weight="700" fill="#3b82f6" text-anchor="middle" letter-spacing="2">4K ULTRA HD</text>
+      </svg>`;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+
+    function createFallbackBackdrop(title) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+        <defs>
+          <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#181c28"/>
+            <stop offset="50%" stop-color="#0f1118"/>
+            <stop offset="100%" stop-color="#060709"/>
+          </linearGradient>
+        </defs>
+        <rect width="1920" height="1080" fill="url(#g)"/>
+        <circle cx="960" cy="500" r="280" fill="rgba(255,255,255,0.02)"/>
+        <text x="960" y="520" font-family="-apple-system, sans-serif" font-size="54" font-weight="800" fill="#ffffff" text-anchor="middle" opacity="0.2">${escapeXml(title || 'FUSION CINEMA')}</text>
+      </svg>`;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+
+    // High-availability CDN Artwork Fallbacks
+    const FALLBACK_CATALOG = [
+      {
+        id: 101,
+        title: "Dune: Part Two",
+        year: "2024",
+        rating: "8.9",
+        duration: "2h 46m",
+        overview: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family, facing a choice between love and the fate of the universe.",
+        poster: "https://image.tmdb.org/t/p/w780/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+        backdrop: "https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s520049.jpg"
+      },
+      {
+        id: 102,
+        title: "Interstellar",
+        year: "2014",
+        rating: "8.7",
+        duration: "2h 49m",
+        overview: "A team of explorers travel through a newly discovered wormhole in space in an attempt to ensure humanity's survival on another habitable world.",
+        poster: "https://image.tmdb.org/t/p/w780/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+        backdrop: "https://image.tmdb.org/t/p/original/rAiYTsqBkRefTnhVfVqvkoNtIO9.jpg"
+      },
+      {
+        id: 103,
+        title: "Blade Runner 2049",
+        year: "2017",
+        rating: "8.5",
+        duration: "2h 44m",
+        overview: "A young blade runner's discovery of a long-buried secret leads him to track down former blade runner Rick Deckard, who has been missing for thirty years.",
+        poster: "https://image.tmdb.org/t/p/w780/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
+        backdrop: "https://image.tmdb.org/t/p/original/ilRyASDvt7vcrR29DQC1A176iaq.jpg"
+      },
+      {
+        id: 104,
+        title: "Oppenheimer",
+        year: "2023",
+        rating: "8.9",
+        duration: "3h 00m",
+        overview: "The story of American scientist J. Robert Oppenheimer and his historical role in the development of the atomic bomb during the Manhattan Project.",
+        poster: "https://image.tmdb.org/t/p/w780/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+        backdrop: "https://image.tmdb.org/t/p/original/nb3xI8XI3w4pMVZ38VijbsyBqP4.jpg"
+      },
+      {
+        id: 105,
+        title: "The Batman",
+        year: "2022",
+        rating: "8.2",
+        duration: "2h 56m",
+        overview: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption.",
+        poster: "https://image.tmdb.org/t/p/w780/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+        backdrop: "https://image.tmdb.org/t/p/original/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg"
+      }
+    ];
 
     const STATE = {
       mode: 'MAIN', // 'MAIN' | 'SETTINGS' | 'MODAL' | 'PLAYER'
@@ -946,7 +1073,7 @@
       railsData: [],
       activeMedia: null,
       
-      // Settings State
+      // Settings State Machine
       settingsTab: 'general',
       settingsSideIndex: 0,
       settingsPaneIndex: 0,
@@ -958,12 +1085,14 @@
     };
 
     const DOM = {
-      ambientBg: document.getElementById('ambientBackdrop'),
+      ambientA: document.getElementById('ambientLayerA'),
+      ambientB: document.getElementById('ambientLayerB'),
       canvas: document.getElementById('canvas'),
       navBar: document.getElementById('navBar'),
       navClock: document.getElementById('navClock'),
       railsContainer: document.getElementById('railsContainer'),
       settingsOverlay: document.getElementById('settingsOverlay'),
+      settingsSidebar: document.getElementById('settingsSidebar'),
       settingsPanelContent: document.getElementById('settingsPanelContent'),
       hero: {
         title: document.getElementById('heroTitle'),
@@ -1021,43 +1150,38 @@
     function showToast(msg) {
       DOM.toast.msg.textContent = msg;
       DOM.toast.pill.classList.add('show');
-      setTimeout(() => DOM.toast.pill.classList.remove('show'), 2400);
+      clearTimeout(DOM.toast.timer);
+      DOM.toast.timer = setTimeout(() => DOM.toast.pill.classList.remove('show'), 2400);
     }
 
-    // --- DATA FETCHING ---
+    // --- DATA LOADING & CARD RENDERING ---
     async function loadCatalog() {
       try {
-        const res = await fetch(`${CONFIG.BACKEND_URL}/api/media/rails`);
-        if (!res.ok) throw new Error('Network error');
+        const res = await fetch(`${CONFIG.BACKEND_URL}/api/media/rails`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('API offline');
         STATE.railsData = await res.json();
       } catch (e) {
-        // Fallback default
         STATE.railsData = [
           {
             id: 'trending',
             title: 'Trending Today',
             subtitle: 'Direct Stream Ready',
             landscape: false,
-            items: [
-              {
-                id: 1,
-                title: "Dune: Part Two",
-                year: "2024",
-                rating: "8.9",
-                overview: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-                backdrop: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop",
-                poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop"
-              },
-              {
-                id: 2,
-                title: "Blade Runner 2049",
-                year: "2023",
-                rating: "8.5",
-                overview: "A young blade runner's discovery of a long-buried secret leads him to track down former blade runner Rick Deckard.",
-                backdrop: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1920&auto=format&fit=crop",
-                poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=600&auto=format&fit=crop"
-              }
-            ]
+            items: FALLBACK_CATALOG
+          },
+          {
+            id: 'critics',
+            title: 'Critically Acclaimed Masterpieces',
+            subtitle: 'Curated 4K Cinema',
+            landscape: false,
+            items: [...FALLBACK_CATALOG].reverse()
+          },
+          {
+            id: 'spotlight',
+            title: 'Cinematic Horizons',
+            subtitle: 'Ultra High Definition',
+            landscape: true,
+            items: FALLBACK_CATALOG
           }
         ];
       }
@@ -1081,17 +1205,24 @@
           </div>
           <div class="rail-track-window">
             <div class="rail-track" id="track-${rIdx}">
-              ${rail.items.map((item, cIdx) => `
-                <div class="card focusable ${rail.landscape ? 'landscape' : ''}" 
-                     data-rail="${rIdx}" 
-                     data-card="${cIdx}">
-                  <img src="${rail.landscape ? item.backdrop : item.poster}" alt="${item.title}" loading="lazy"/>
-                  <div class="card-glow-overlay">
-                    <div class="card-title">${item.title}</div>
-                    <div class="card-subtitle">${item.year} • ★ ${item.rating}</div>
+              ${rail.items.map((item, cIdx) => {
+                const initialSrc = rail.landscape ? (item.backdrop || item.poster) : item.poster;
+                const fallbackSvg = rail.landscape ? createFallbackBackdrop(item.title) : createFallbackPoster(item.title);
+                return `
+                  <div class="card focusable ${rail.landscape ? 'landscape' : ''}" 
+                       data-rail="${rIdx}" 
+                       data-card="${cIdx}">
+                    <img src="${initialSrc || fallbackSvg}" 
+                         alt="${escapeXml(item.title)}" 
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='${fallbackSvg}';"/>
+                    <div class="card-glow-overlay">
+                      <div class="card-title">${item.title}</div>
+                      <div class="card-subtitle">${item.year} • ★ ${item.rating}</div>
+                    </div>
                   </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           </div>
         `;
@@ -1099,27 +1230,44 @@
       });
     }
 
-    let ambientTimer = null;
+    // Smooth Dual-Layer Crossfade for Ambient Art
+    let activeAmbientLayer = 'A';
+    let ambientDebounceTimer = null;
+
     function updateAmbientAndHero(media) {
       if (!media) return;
       STATE.activeMedia = media;
-
-      clearTimeout(ambientTimer);
-      ambientTimer = setTimeout(() => {
-        DOM.ambientBg.style.opacity = '0.35';
-        setTimeout(() => {
-          DOM.ambientBg.style.backgroundImage = `url('${media.backdrop}')`;
-          DOM.ambientBg.style.opacity = '1';
-        }, 180);
-      }, 140);
 
       DOM.hero.title.textContent = media.title;
       DOM.hero.rating.textContent = `★ ${media.rating}`;
       DOM.hero.year.textContent = media.year;
       DOM.hero.overview.textContent = media.overview;
+
+      clearTimeout(ambientDebounceTimer);
+      ambientDebounceTimer = setTimeout(() => {
+        const targetUrl = media.backdrop || media.poster || createFallbackBackdrop(media.title);
+        const nextLayer = activeAmbientLayer === 'A' ? DOM.ambientB : DOM.ambientA;
+        const currentLayer = activeAmbientLayer === 'A' ? DOM.ambientA : DOM.ambientB;
+
+        const imgLoader = new Image();
+        imgLoader.onload = () => {
+          nextLayer.style.backgroundImage = `url('${targetUrl}')`;
+          nextLayer.classList.add('visible');
+          currentLayer.classList.remove('visible');
+          activeAmbientLayer = activeAmbientLayer === 'A' ? 'B' : 'A';
+        };
+        imgLoader.onerror = () => {
+          const fallback = createFallbackBackdrop(media.title);
+          nextLayer.style.backgroundImage = `url('${fallback}')`;
+          nextLayer.classList.add('visible');
+          currentLayer.classList.remove('visible');
+          activeAmbientLayer = activeAmbientLayer === 'A' ? 'B' : 'A';
+        };
+        imgLoader.src = targetUrl;
+      }, 180);
     }
 
-    // --- SETTINGS VIEW RENDERER ---
+    // --- SETTINGS VIEW STATE CONTROLLER ---
     const SETTINGS_TABS = ['general', 'sources', 'appearance', 'account', 'about'];
 
     function renderSettingsPanel(tab) {
@@ -1174,9 +1322,9 @@
           <div class="settings-row focusable">
             <div>
               <div class="settings-row-label">Dynamic Ambient Backdrops</div>
-              <div class="settings-row-sub">Hardware blurred background shifting</div>
+              <div class="settings-row-sub">Hardware dual-layer crossfade engine</div>
             </div>
-            <div class="settings-input-pill">54px Gaussian</div>
+            <div class="settings-input-pill">36px Gaussian</div>
           </div>
         `,
         account: `
@@ -1211,12 +1359,17 @@
       };
 
       DOM.settingsPanelContent.innerHTML = panels[tab] || '';
-      document.querySelectorAll('.settings-tab-btn').forEach((btn, idx) => {
-        btn.classList.toggle('selected', SETTINGS_TABS[idx] === tab);
+      syncSettingsTabSelection();
+    }
+
+    function syncSettingsTabSelection() {
+      const tabBtns = DOM.settingsSidebar.querySelectorAll('.settings-tab-btn');
+      tabBtns.forEach((btn, idx) => {
+        btn.classList.toggle('selected', idx === STATE.settingsSideIndex);
       });
     }
 
-    // --- SPATIAL NAVIGATION FOCUS MANAGEMENT ---
+    // --- SPATIAL FOCUS CONTROLLER ---
     function removeAllFocus() {
       document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
     }
@@ -1244,14 +1397,15 @@
           if (card) {
             card.classList.add('focused');
             centerCard(STATE.activeRail, STATE.activeCardByRail[STATE.activeRail]);
-            scrollCanvasTo(280 + (STATE.activeRail * 380));
+            scrollCanvasTo(320 + (STATE.activeRail * 490));
             const media = STATE.railsData[STATE.activeRail].items[STATE.activeCardByRail[STATE.activeRail]];
             updateAmbientAndHero(media);
           }
         }
       } else if (STATE.mode === 'SETTINGS') {
+        syncSettingsTabSelection();
         if (STATE.settingsFocusArea === 'SIDEBAR') {
-          const tabBtns = document.querySelectorAll('.settings-tab-btn');
+          const tabBtns = DOM.settingsSidebar.querySelectorAll('.settings-tab-btn');
           if (tabBtns[STATE.settingsSideIndex]) {
             tabBtns[STATE.settingsSideIndex].classList.add('focused');
           }
@@ -1272,13 +1426,13 @@
       }
     }
 
+    // Zero-Layout-Thrashing Track Centering
     function centerCard(railIdx, cardIdx) {
       const track = document.getElementById(`track-${railIdx}`);
       if (!track) return;
-      const cards = track.querySelectorAll('.card');
-      const target = cards[cardIdx];
-      if (!target) return;
-      const offset = cardIdx * (target.offsetWidth + 28);
+      const isLandscape = STATE.railsData[railIdx] && STATE.railsData[railIdx].landscape;
+      const step = isLandscape ? CONFIG.LANDSCAPE_STEP : CONFIG.PORTRAIT_STEP;
+      const offset = cardIdx * step;
       track.style.transform = `translate3d(-${offset}px, 0, 0)`;
     }
 
@@ -1294,7 +1448,9 @@
       DOM.modal.rating.textContent = `★ ${item.rating}`;
       DOM.modal.year.textContent = item.year;
       DOM.modal.duration.textContent = item.duration || '2h 15m';
-      DOM.modal.art.style.backgroundImage = `url('${item.backdrop}')`;
+
+      const modalArtUrl = item.backdrop || item.poster || createFallbackBackdrop(item.title);
+      DOM.modal.art.style.backgroundImage = `url('${modalArtUrl}')`;
 
       STATE.mode = 'MODAL';
       STATE.modalBtnIndex = 0;
@@ -1315,7 +1471,9 @@
       const item = media || STATE.activeMedia;
       showToast(`Resolving stream for ${item.title}...`);
 
-      if (STATE.mode === 'MODAL') closeModal();
+      if (STATE.mode === 'MODAL') {
+        DOM.modal.overlay.classList.remove('active');
+      }
 
       try {
         const res = await fetch(`${CONFIG.BACKEND_URL}/api/resolve?title=${encodeURIComponent(item.title)}&year=${item.year}&tmdbId=${item.id}`);
@@ -1396,11 +1554,11 @@
       return `${m < 10 ? '0' : ''}${m}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
-    // --- KEYBOARD & WEBOS REMOTE DISPATCHER ---
+    // --- SEQUENTIAL BACK-KEY HIERARCHY & D-PAD DISPATCHER ---
     window.addEventListener('keydown', (e) => {
       const key = e.keyCode;
 
-      // LG webOS Media Keys
+      // LG webOS Native Playback Keys
       if (key === 415) { // Play
         if (STATE.mode === 'PLAYER') { DOM.player.video.play(); updatePlayPauseIcon(true); }
         return;
@@ -1410,29 +1568,43 @@
         return;
       }
 
-      // Back Key (webOS: 461, Standard: 27 / 8)
+      // Sequential View-Stack Back Key Handling (webOS: 461, Escape: 27, Backspace: 8)
       if (key === 461 || key === 27 || key === 8) {
         if (STATE.mode === 'PLAYER') {
           stopPlayer();
-        } else if (STATE.mode === 'MODAL') {
+        } 
+        else if (STATE.mode === 'MODAL') {
           closeModal();
-        } else if (STATE.mode === 'SETTINGS') {
-          DOM.settingsOverlay.classList.remove('active');
-          STATE.mode = 'MAIN';
-          STATE.zone = 'NAV';
-          applyFocus();
-        } else if (STATE.mode === 'MAIN') {
-          if (STATE.zone !== 'NAV') {
-            STATE.zone = 'NAV';
+        } 
+        else if (STATE.mode === 'SETTINGS') {
+          if (STATE.settingsFocusArea === 'PANE') {
+            // Step 1: Pop from Pane back to active Sidebar tab
+            STATE.settingsFocusArea = 'SIDEBAR';
             applyFocus();
           } else {
-            showToast("Press Home button on LG Magic Remote to return to webOS");
+            // Step 2: Pop from Sidebar back to Main Top Navigation
+            DOM.settingsOverlay.classList.remove('active');
+            STATE.mode = 'MAIN';
+            STATE.zone = 'NAV';
+            applyFocus();
+          }
+        } 
+        else if (STATE.mode === 'MAIN') {
+          if (STATE.zone === 'RAILS') {
+            STATE.zone = 'HERO';
+            STATE.heroIndex = 0;
+            applyFocus();
+          } else if (STATE.zone === 'HERO') {
+            STATE.zone = 'NAV';
+            applyFocus();
+          } else if (STATE.zone === 'NAV') {
+            showToast("Press Home button on LG Magic Remote to exit");
           }
         }
         return;
       }
 
-      // Dispatch by mode
+      // Mode-specific D-pad Dispatchers
       if (STATE.mode === 'SETTINGS') {
         handleSettingsKey(key);
       } else if (STATE.mode === 'MODAL') {
@@ -1444,7 +1616,7 @@
       }
     });
 
-    // Main Mode D-Pad Handling
+    // Main Dashboard Mode D-Pad Handling
     function handleMainKey(k) {
       switch (k) {
         case 38: // UP
@@ -1478,7 +1650,10 @@
 
         case 37: // LEFT
           if (STATE.zone === 'NAV') {
-            if (STATE.navIndex > 0) STATE.navIndex--;
+            if (STATE.navIndex > 0) {
+              STATE.navIndex--;
+              updateNavSelection();
+            }
           } else if (STATE.zone === 'HERO') {
             if (STATE.heroIndex > 0) STATE.heroIndex--;
           } else if (STATE.zone === 'RAILS') {
@@ -1491,7 +1666,10 @@
         case 39: // RIGHT
           if (STATE.zone === 'NAV') {
             const navItems = DOM.navBar.querySelectorAll('.nav-item');
-            if (STATE.navIndex < navItems.length - 1) STATE.navIndex++;
+            if (STATE.navIndex < navItems.length - 1) {
+              STATE.navIndex++;
+              updateNavSelection();
+            }
           } else if (STATE.zone === 'HERO') {
             if (STATE.heroIndex < 1) STATE.heroIndex++;
           } else if (STATE.zone === 'RAILS') {
@@ -1513,7 +1691,7 @@
               renderSettingsPanel(SETTINGS_TABS[0]);
               DOM.settingsOverlay.classList.add('active');
             } else {
-              showToast(`Navigated to ${target.toUpperCase()}`);
+              showToast(`Category: ${target.toUpperCase()}`);
             }
           } else if (STATE.zone === 'HERO') {
             if (STATE.heroIndex === 0) startStreamPlayback(STATE.activeMedia);
@@ -1525,6 +1703,13 @@
           applyFocus();
           break;
       }
+    }
+
+    function updateNavSelection() {
+      const navItems = DOM.navBar.querySelectorAll('.nav-item');
+      navItems.forEach((item, idx) => {
+        item.classList.toggle('active', idx === STATE.navIndex);
+      });
     }
 
     // Settings Mode D-Pad Handling
@@ -1542,7 +1727,7 @@
             renderSettingsPanel(SETTINGS_TABS[STATE.settingsSideIndex]);
             applyFocus();
           }
-        } else if (k === 39) { // RIGHT
+        } else if (k === 39 || k === 13) { // RIGHT or ENTER -> Move into Pane
           STATE.settingsFocusArea = 'PANE';
           STATE.settingsPaneIndex = 0;
           applyFocus();
@@ -1559,11 +1744,11 @@
             STATE.settingsPaneIndex++;
             applyFocus();
           }
-        } else if (k === 37) { // LEFT
+        } else if (k === 37) { // LEFT -> Return to Sidebar Tab
           STATE.settingsFocusArea = 'SIDEBAR';
           applyFocus();
         } else if (k === 13) { // ENTER
-          showToast("Preference updated");
+          showToast("Setting updated");
         }
       }
     }
@@ -1618,7 +1803,7 @@
       }
     }
 
-    // Start App
+    // Boot App
     window.addEventListener('DOMContentLoaded', loadCatalog);
   </script>
 </body>
