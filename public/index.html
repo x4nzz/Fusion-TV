@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fusion TV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & RESET (Optimized for 10-Foot 1080p / 4K OLED webOS UI)
+       ========================================================================== */
+    :root {
+      --bg-void: #07080a;
+      --bg-surface: rgba(22, 24, 31, 0.75);
+      --bg-card: rgba(255, 255, 255, 0.05);
+      --bg-glass: rgba(18, 20, 26, 0.7);
+      --border-glass: rgba(255, 255, 255, 0.1);
+      
+      --accent-white: #ffffff;
+      --accent-highlight: #3b82f6;
+      --text-primary: #f5f6f8;
+      --text-secondary: rgba(245, 246, 248, 0.62);
+      --text-muted: rgba(245, 246, 248, 0.38);
+
+      --focus-glow: rgba(255, 255, 255, 0.3);
+      --focus-ring: #ffffff;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 22px;
+      --radius-full: 9999px;
+
+      --ease-tv: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background-color: var(--bg-void);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.4;
+      position: relative;
+      cursor: none; /* Hide default pointer for native TV D-Pad feel */
+    }
+
+    /* Ambient Dynamic Backdrop */
+    .ambient-container {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .ambient-backdrop {
+      position: absolute;
+      inset: -50px;
+      background-size: cover;
+      background-position: center 25%;
+      filter: blur(54px) brightness(0.24) saturate(1.45);
+      transition: opacity 0.85s var(--ease-tv), transform 1.2s var(--ease-tv);
+      opacity: 1;
+      transform: scale(1.05);
+      will-change: opacity, transform;
+    }
+
+    .ambient-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 75% 25%, transparent 10%, rgba(7, 8, 10, 0.82) 65%, var(--bg-void) 100%),
+                  linear-gradient(to bottom, rgba(7, 8, 10, 0.35) 0%, rgba(7, 8, 10, 0.95) 75%, var(--bg-void) 100%);
+    }
+
+    /* ==========================================================================
+       TOP NAVIGATION BAR
+       ========================================================================== */
+    .top-nav {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 80px;
+      z-index: 50;
+      background: linear-gradient(to bottom, rgba(7,8,10,0.88) 0%, rgba(7,8,10,0) 100%);
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+    }
+
+    .nav-pill-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      padding: 6px 8px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-glass);
+    }
+
+    .nav-item {
+      padding: 10px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: var(--radius-full);
+      transition: all 0.25s var(--ease-tv);
+      border: 2px solid transparent;
+    }
+
+    .nav-item.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .nav-clock {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    /* ==========================================================================
+       VIEWPORT & CANVAS TRANSLATION
+       ========================================================================== */
+    .viewport {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .content-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      transition: transform 0.45s var(--ease-tv);
+      will-change: transform;
+    }
+
+    /* ==========================================================================
+       HERO SPOTLIGHT BANNER
+       ========================================================================== */
+    .hero-section {
+      height: 640px;
+      padding: 120px 80px 0 80px;
+      display: flex;
+      align-items: flex-end;
+      position: relative;
+    }
+
+    .hero-content {
+      max-width: 840px;
+      z-index: 2;
+    }
+
+    .hero-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .badge-pill {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      color: #fff;
+    }
+
+    .badge-pill.gold {
+      background: rgba(234, 179, 8, 0.18);
+      border-color: rgba(234, 179, 8, 0.4);
+      color: #facc15;
+    }
+
+    .hero-title {
+      font-size: 60px;
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.8);
+    }
+
+    .hero-synopsis {
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 32px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      max-width: 740px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    }
+
+    .hero-action-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    /* Universal Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 34px;
+      border-radius: var(--radius-md);
+      font-size: 17px;
+      font-weight: 700;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: all 0.25s var(--ease-tv);
+    }
+
+    .btn.btn-primary {
+      background: #ffffff;
+      color: #07080a;
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* ==========================================================================
+       MEDIA RAILS & CAROUSELS
+       ========================================================================== */
+    .rails-stack {
+      padding-top: 24px;
+      padding-bottom: 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 52px;
+    }
+
+    .rail-container {
+      position: relative;
+    }
+
+    .rail-header {
+      padding: 0 80px 18px 80px;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+    }
+
+    .rail-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: #fff;
+    }
+
+    .rail-subtitle {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .rail-track-window {
+      position: relative;
+      width: 100%;
+      overflow: visible;
+      padding-left: 80px;
+    }
+
+    .rail-track {
+      display: flex;
+      gap: 28px;
+      transition: transform 0.4s var(--ease-tv);
+      will-change: transform;
+    }
+
+    /* Media Cards */
+    .card {
+      flex: 0 0 auto;
+      width: 220px;
+      height: 330px;
+      border-radius: var(--radius-md);
+      background-color: var(--bg-card);
+      position: relative;
+      overflow: hidden;
+      border: 2.5px solid transparent;
+      transition: transform 0.3s var(--ease-tv), border-color 0.3s var(--ease-tv), box-shadow 0.3s var(--ease-tv);
+      will-change: transform;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+
+    .card .card-glow-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(7, 8, 10, 0.95) 0%, rgba(7, 8, 10, 0) 50%);
+      opacity: 0.85;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px;
+      transition: opacity 0.25s ease;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    .card.landscape {
+      width: 380px;
+      height: 215px;
+    }
+
+    /* ==========================================================================
+       D-PAD FOCUS STATES (WebOS High-Contrast Rings & Dynamic Scaling)
+       ========================================================================== */
+    .focusable {
+      outline: none;
+    }
+
+    .focusable.focused {
+      z-index: 30;
+      border-color: var(--focus-ring) !important;
+      transform: scale(1.08) translateY(-6px);
+      box-shadow: 0 20px 42px rgba(0, 0, 0, 0.95), 0 0 28px var(--focus-glow) !important;
+    }
+
+    .btn.focusable.focused {
+      transform: scale(1.08);
+      border-color: var(--focus-ring);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+
+    .nav-item.focusable.focused {
+      background: #ffffff;
+      color: #07080a;
+      transform: scale(1.06);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ==========================================================================
+       SETTINGS VIEW (Dedicated Screen with SVG Tabs)
+       ========================================================================== */
+    .settings-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(7, 8, 10, 0.92);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      display: none;
+      padding: 120px 100px 80px 100px;
+      opacity: 0;
+      transition: opacity 0.3s var(--ease-tv);
+    }
+
+    .settings-overlay.active {
+      display: flex;
+      opacity: 1;
+      gap: 60px;
+    }
+
+    .settings-sidebar {
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      border-right: 1px solid var(--border-glass);
+      padding-right: 40px;
+    }
+
+    .settings-tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 2px solid transparent;
+      transition: all 0.25s var(--ease-tv);
+    }
+
+    .settings-tab-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    .settings-tab-btn.selected {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .settings-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 40px 40px 10px;
+    }
+
+    .settings-section-title {
+      font-size: 34px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .settings-section-desc {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      border: 2px solid transparent;
+      margin-bottom: 18px;
+      transition: all 0.25s var(--ease-tv);
+    }
+
+    .settings-row-label {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .settings-row-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .settings-input-pill {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 18px;
+      border-radius: var(--radius-full);
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* ==========================================================================
+       MEDIA DETAIL VIEW MODAL
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(7, 8, 10, 0.85);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s var(--ease-tv);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      width: 1600px;
+      height: 860px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      box-shadow: 0 35px 70px rgba(0,0,0,0.95);
+      transform: scale(0.96);
+      transition: transform 0.35s var(--ease-tv);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-bg-artwork {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 65%;
+      height: 100%;
+      background-size: cover;
+      background-position: center top;
+      mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+      -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+      opacity: 0.55;
+    }
+
+    .modal-left-details {
+      position: relative;
+      z-index: 2;
+      width: 55%;
+      padding: 70px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .modal-title {
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+
+    .modal-meta-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .modal-overview {
+      font-size: 19px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+      max-height: 200px;
+      overflow: hidden;
+    }
+
+    .modal-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* ==========================================================================
+       NATIVE HTML5 VIDEO PLAYER (TV Custom OSD)
+       ========================================================================== */
+    .player-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .player-overlay.active {
+      display: flex;
+    }
+
+    video#nativeVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .player-hud {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.8) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 50px 80px;
+      opacity: 1;
+      transition: opacity 0.4s var(--ease-tv);
+    }
+
+    .player-hud.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .player-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .player-movie-info h2 {
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .player-movie-info p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .player-scrubber-box {
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    .progress-track-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      position: relative;
+    }
+
+    .progress-track-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: #ffffff;
+      border-radius: var(--radius-full);
+    }
+
+    .progress-time-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .player-controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    .player-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      border: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      transition: all 0.25s var(--ease-tv);
+    }
+
+    .player-btn svg {
+      width: 26px;
+      height: 26px;
+      fill: currentColor;
+    }
+
+    .player-btn.play-master {
+      width: 76px;
+      height: 76px;
+      background: #ffffff;
+      color: #07080a;
+    }
+
+    /* Toast Notification */
+    .toast-pill {
+      position: fixed;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(22, 24, 31, 0.95);
+      border: 1px solid var(--border-glass);
+      backdrop-filter: blur(25px);
+      padding: 14px 28px;
+      border-radius: var(--radius-full);
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 999;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      transition: transform 0.4s var(--ease-tv);
+    }
+
+    .toast-pill.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AMBIENT BACKDROP -->
+  <div class="ambient-container">
+    <div id="ambientBackdrop" class="ambient-backdrop"></div>
+    <div class="ambient-overlay"></div>
+  </div>
+
+  <!-- TOAST FEEDBACK -->
+  <div id="toastPill" class="toast-pill">
+    <span id="toastMessage">Notification</span>
+  </div>
+
+  <!-- TOP NAVIGATION -->
+  <header class="top-nav">
+    <div class="brand-logo">
+      Fusion
+      <span class="brand-badge">PRO TV</span>
+    </div>
+    <nav class="nav-pill-group" id="navBar">
+      <div class="nav-item focusable active" data-nav="home">Home</div>
+      <div class="nav-item focusable" data-nav="movies">Movies</div>
+      <div class="nav-item focusable" data-nav="series">Series</div>
+      <div class="nav-item focusable" data-nav="settings">Settings</div>
+    </nav>
+    <div class="nav-clock" id="navClock">12:00 PM</div>
+  </header>
+
+  <!-- MAIN SCROLLABLE CANVAS -->
+  <div class="viewport" id="viewport">
+    <div class="content-canvas" id="canvas">
+
+      <!-- HERO BANNER -->
+      <section class="hero-section" id="heroBanner">
+        <div class="hero-content">
+          <div class="hero-meta-row">
+            <span class="badge-pill gold" id="heroRating">★ 8.9</span>
+            <span class="badge-pill">4K DOLBY VISION</span>
+            <span class="badge-pill">ATMOS</span>
+            <span class="badge-pill" id="heroYear">2024</span>
+          </div>
+          <h1 class="hero-title" id="heroTitle">Dune: Part Two</h1>
+          <p class="hero-synopsis" id="heroOverview">Loading synopsis...</p>
+          <div class="hero-action-row">
+            <button class="btn btn-primary focusable" id="heroPlayBtn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              Watch Now
+            </button>
+            <button class="btn focusable" id="heroDetailsBtn">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              More Info
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RAILS STACK -->
+      <main class="rails-stack" id="railsContainer"></main>
+
+    </div>
+  </div>
+
+  <!-- SETTINGS VIEW OVERLAY WITH FUNCTIONAL TABS -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-sidebar">
+      <!-- General Tab -->
+      <button class="settings-tab-btn focusable selected" data-tab="general">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        General
+      </button>
+
+      <!-- Stream Sources Tab -->
+      <button class="settings-tab-btn focusable" data-tab="sources">
+        <svg viewBox="0 0 24 24"><path d="M12 3C6.48 3 2 7.48 2 13c0 3.7 2.01 6.92 4.99 8.65l1-1.73C5.61 18.53 4 15.96 4 13c0-4.41 3.59-8 8-8s8 3.59 8 8c0 2.96-1.61 5.53-3.99 6.92l1 1.73c2.98-1.73 4.99-4.95 4.99-8.65 0-5.52-4.48-10-10-10zm0 4c-3.31 0-6 2.69-6 6 0 2.22 1.21 4.15 3 5.19l1-1.74c-1.19-.7-2-1.97-2-3.45 0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.48-.81 2.75-2 3.45l1 1.74c1.79-1.04 3-2.97 3-5.19 0-3.31-2.69-6-6-6zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        Stream Sources
+      </button>
+
+      <!-- Appearance Tab -->
+      <button class="settings-tab-btn focusable" data-tab="appearance">
+        <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l.86-.86C8.12 19.91 9.97 21 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+        Appearance
+      </button>
+
+      <!-- Account / Sync Tab -->
+      <button class="settings-tab-btn focusable" data-tab="account">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        Account
+      </button>
+
+      <!-- About Tab -->
+      <button class="settings-tab-btn focusable" data-tab="about">
+        <svg viewBox="0 0 24 24"><path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/></svg>
+        About
+      </button>
+    </div>
+
+    <!-- Right Settings Panel -->
+    <div class="settings-panel" id="settingsPanelContent">
+      <!-- Dynamic Panel Contents Injected via JS -->
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-card">
+      <div class="modal-bg-artwork" id="modalArt"></div>
+      <div class="modal-left-details">
+        <div class="modal-meta-bar">
+          <span class="badge-pill gold" id="modalRating">★ 8.9</span>
+          <span class="badge-pill">4K UHD</span>
+          <span class="badge-pill">HDR10+</span>
+          <span class="badge-pill" id="modalYear">2024</span>
+          <span class="badge-pill" id="modalDuration">2h 46m</span>
+        </div>
+        <h2 class="modal-title" id="modalTitle">Media Title</h2>
+        <p class="modal-overview" id="modalOverview">Media overview description...</p>
+        <div class="modal-actions">
+          <button class="btn btn-primary focusable" id="modalPlayBtn">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Play Stream
+          </button>
+          <button class="btn focusable" id="modalTrailerBtn">Trailer</button>
+          <button class="btn focusable" id="modalBookmarkBtn">+ Watchlist</button>
+          <button class="btn focusable" id="modalCloseBtn">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NATIVE TV VIDEO PLAYER -->
+  <div class="player-overlay" id="playerOverlay">
+    <video id="nativeVideo" preload="auto">
+      <source src="" type="video/mp4">
+    </video>
+    <div class="player-hud" id="playerHud">
+      <div class="player-top-bar">
+        <div class="player-movie-info">
+          <h2 id="playerTitle">Direct Stream</h2>
+          <p id="playerSubtitle">Ultra HD • Direct Resolver</p>
+        </div>
+        <span class="badge-pill" id="playerStreamBadge">HLS MASTER</span>
+      </div>
+
+      <div class="player-bottom-group">
+        <div class="player-scrubber-box">
+          <div class="progress-track-bg">
+            <div class="progress-track-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-time-row">
+            <span id="playerCurTime">00:00</span>
+            <span id="playerDuration">00:00</span>
+          </div>
+        </div>
+
+        <div class="player-controls-row">
+          <button class="player-btn focusable" id="pBtnRw">
+            <svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+          </button>
+          <button class="player-btn play-master focusable" id="pBtnPlay">
+            <svg id="pPlayIcon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button class="player-btn focusable" id="pBtnFw">
+            <svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+          </button>
+          <button class="player-btn focusable" id="pBtnAudio">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          </button>
+          <button class="player-btn focusable" id="pBtnExit">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC & SPATIAL ENGINE -->
+  <script>
+    const CONFIG = {
+      BACKEND_URL: 'http://localhost:3000', // Auto-points to local server or configure via Settings
+      REFRESH_INTERVAL: 60000
+    };
+
+    const STATE = {
+      mode: 'MAIN', // 'MAIN' | 'SETTINGS' | 'MODAL' | 'PLAYER'
+      zone: 'RAILS', // 'NAV' | 'HERO' | 'RAILS'
+      navIndex: 0,
+      heroIndex: 0,
+      activeRail: 0,
+      activeCardByRail: {},
+      railsData: [],
+      activeMedia: null,
+      
+      // Settings State
+      settingsTab: 'general',
+      settingsSideIndex: 0,
+      settingsPaneIndex: 0,
+      settingsFocusArea: 'SIDEBAR', // 'SIDEBAR' | 'PANE'
+
+      // Modal & Player States
+      modalBtnIndex: 0,
+      playerBtnIndex: 1
+    };
+
+    const DOM = {
+      ambientBg: document.getElementById('ambientBackdrop'),
+      canvas: document.getElementById('canvas'),
+      navBar: document.getElementById('navBar'),
+      navClock: document.getElementById('navClock'),
+      railsContainer: document.getElementById('railsContainer'),
+      settingsOverlay: document.getElementById('settingsOverlay'),
+      settingsPanelContent: document.getElementById('settingsPanelContent'),
+      hero: {
+        title: document.getElementById('heroTitle'),
+        rating: document.getElementById('heroRating'),
+        year: document.getElementById('heroYear'),
+        overview: document.getElementById('heroOverview'),
+        playBtn: document.getElementById('heroPlayBtn'),
+        detailsBtn: document.getElementById('heroDetailsBtn')
+      },
+      modal: {
+        overlay: document.getElementById('detailModal'),
+        art: document.getElementById('modalArt'),
+        title: document.getElementById('modalTitle'),
+        rating: document.getElementById('modalRating'),
+        year: document.getElementById('modalYear'),
+        duration: document.getElementById('modalDuration'),
+        overview: document.getElementById('modalOverview'),
+        playBtn: document.getElementById('modalPlayBtn'),
+        trailerBtn: document.getElementById('modalTrailerBtn'),
+        bookmarkBtn: document.getElementById('modalBookmarkBtn'),
+        closeBtn: document.getElementById('modalCloseBtn')
+      },
+      player: {
+        overlay: document.getElementById('playerOverlay'),
+        video: document.getElementById('nativeVideo'),
+        hud: document.getElementById('playerHud'),
+        title: document.getElementById('playerTitle'),
+        badge: document.getElementById('playerStreamBadge'),
+        curTime: document.getElementById('playerCurTime'),
+        duration: document.getElementById('playerDuration'),
+        progressFill: document.getElementById('progressFill'),
+        playIcon: document.getElementById('pPlayIcon'),
+        buttons: [
+          document.getElementById('pBtnRw'),
+          document.getElementById('pBtnPlay'),
+          document.getElementById('pBtnFw'),
+          document.getElementById('pBtnAudio'),
+          document.getElementById('pBtnExit')
+        ]
+      },
+      toast: {
+        pill: document.getElementById('toastPill'),
+        msg: document.getElementById('toastMessage')
+      }
+    };
+
+    // Live Clock
+    function updateClock() {
+      const now = new Date();
+      DOM.navClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function showToast(msg) {
+      DOM.toast.msg.textContent = msg;
+      DOM.toast.pill.classList.add('show');
+      setTimeout(() => DOM.toast.pill.classList.remove('show'), 2400);
+    }
+
+    // --- DATA FETCHING ---
+    async function loadCatalog() {
+      try {
+        const res = await fetch(`${CONFIG.BACKEND_URL}/api/media/rails`);
+        if (!res.ok) throw new Error('Network error');
+        STATE.railsData = await res.json();
+      } catch (e) {
+        // Fallback default
+        STATE.railsData = [
+          {
+            id: 'trending',
+            title: 'Trending Today',
+            subtitle: 'Direct Stream Ready',
+            landscape: false,
+            items: [
+              {
+                id: 1,
+                title: "Dune: Part Two",
+                year: "2024",
+                rating: "8.9",
+                overview: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
+                backdrop: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop",
+                poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop"
+              },
+              {
+                id: 2,
+                title: "Blade Runner 2049",
+                year: "2023",
+                rating: "8.5",
+                overview: "A young blade runner's discovery of a long-buried secret leads him to track down former blade runner Rick Deckard.",
+                backdrop: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1920&auto=format&fit=crop",
+                poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=600&auto=format&fit=crop"
+              }
+            ]
+          }
+        ];
+      }
+      renderRails();
+      if (STATE.railsData[0] && STATE.railsData[0].items[0]) {
+        updateAmbientAndHero(STATE.railsData[0].items[0]);
+      }
+      applyFocus();
+    }
+
+    function renderRails() {
+      DOM.railsContainer.innerHTML = '';
+      STATE.railsData.forEach((rail, rIdx) => {
+        STATE.activeCardByRail[rIdx] = 0;
+        const railEl = document.createElement('section');
+        railEl.className = 'rail-container';
+        railEl.innerHTML = `
+          <div class="rail-header">
+            <h2 class="rail-title">${rail.title}</h2>
+            <span class="rail-subtitle">${rail.subtitle}</span>
+          </div>
+          <div class="rail-track-window">
+            <div class="rail-track" id="track-${rIdx}">
+              ${rail.items.map((item, cIdx) => `
+                <div class="card focusable ${rail.landscape ? 'landscape' : ''}" 
+                     data-rail="${rIdx}" 
+                     data-card="${cIdx}">
+                  <img src="${rail.landscape ? item.backdrop : item.poster}" alt="${item.title}" loading="lazy"/>
+                  <div class="card-glow-overlay">
+                    <div class="card-title">${item.title}</div>
+                    <div class="card-subtitle">${item.year} • ★ ${item.rating}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        DOM.railsContainer.appendChild(railEl);
+      });
+    }
+
+    let ambientTimer = null;
+    function updateAmbientAndHero(media) {
+      if (!media) return;
+      STATE.activeMedia = media;
+
+      clearTimeout(ambientTimer);
+      ambientTimer = setTimeout(() => {
+        DOM.ambientBg.style.opacity = '0.35';
+        setTimeout(() => {
+          DOM.ambientBg.style.backgroundImage = `url('${media.backdrop}')`;
+          DOM.ambientBg.style.opacity = '1';
+        }, 180);
+      }, 140);
+
+      DOM.hero.title.textContent = media.title;
+      DOM.hero.rating.textContent = `★ ${media.rating}`;
+      DOM.hero.year.textContent = media.year;
+      DOM.hero.overview.textContent = media.overview;
+    }
+
+    // --- SETTINGS VIEW RENDERER ---
+    const SETTINGS_TABS = ['general', 'sources', 'appearance', 'account', 'about'];
+
+    function renderSettingsPanel(tab) {
+      STATE.settingsTab = tab;
+      const panels = {
+        general: `
+          <h2 class="settings-section-title">General Preferences</h2>
+          <p class="settings-section-desc">Manage system connectivity, remote endpoints, and playback behaviour.</p>
+          <div class="settings-row focusable" data-action="backend_url">
+            <div>
+              <div class="settings-row-label">Local Scraper Backend URL</div>
+              <div class="settings-row-sub">${CONFIG.BACKEND_URL}</div>
+            </div>
+            <div class="settings-input-pill">Connected (200 OK)</div>
+          </div>
+          <div class="settings-row focusable" data-action="auto_next">
+            <div>
+              <div class="settings-row-label">Autoplay Next Episode</div>
+              <div class="settings-row-sub">Seamlessly transition to next playlist item</div>
+            </div>
+            <div class="settings-input-pill">Enabled</div>
+          </div>
+        `,
+        sources: `
+          <h2 class="settings-section-title">Streaming Sources & Resolvers</h2>
+          <p class="settings-section-desc">Configure scraper priority for direct video index extraction.</p>
+          <div class="settings-row focusable">
+            <div>
+              <div class="settings-row-label">Primary Scraper Provider</div>
+              <div class="settings-row-sub">Yarrlist & Public Directory Indexes</div>
+            </div>
+            <div class="settings-input-pill">Active</div>
+          </div>
+          <div class="settings-row focusable">
+            <div>
+              <div class="settings-row-label">Archive.org Open Index</div>
+              <div class="settings-row-sub">Public domain fallback engine</div>
+            </div>
+            <div class="settings-input-pill">Standby</div>
+          </div>
+        `,
+        appearance: `
+          <h2 class="settings-section-title">Appearance & Motion</h2>
+          <p class="settings-section-desc">Customize UI accent colors and OLED animations.</p>
+          <div class="settings-row focusable">
+            <div>
+              <div class="settings-row-label">OLED True Black Level</div>
+              <div class="settings-row-sub">Calibrated for LG Cinema / OLED displays</div>
+            </div>
+            <div class="settings-input-pill">#07080a</div>
+          </div>
+          <div class="settings-row focusable">
+            <div>
+              <div class="settings-row-label">Dynamic Ambient Backdrops</div>
+              <div class="settings-row-sub">Hardware blurred background shifting</div>
+            </div>
+            <div class="settings-input-pill">54px Gaussian</div>
+          </div>
+        `,
+        account: `
+          <h2 class="settings-section-title">Account & Integrations</h2>
+          <p class="settings-section-desc">Sync watch history and metadata catalog keys.</p>
+          <div class="settings-row focusable">
+            <div>
+              <div class="settings-row-label">TheMovieDatabase (TMDB) API</div>
+              <div class="settings-row-sub">Live movie & show information sync</div>
+            </div>
+            <div class="settings-input-pill">Linked</div>
+          </div>
+        `,
+        about: `
+          <h2 class="settings-section-title">About Fusion TV</h2>
+          <p class="settings-section-desc">Client environment and software manifest.</p>
+          <div class="settings-row focusable">
+            <div>
+              <div class="settings-row-label">Application Version</div>
+              <div class="settings-row-sub">Fusion Pro TV Edition</div>
+            </div>
+            <div class="settings-input-pill">v2.4.0 (webOS Build)</div>
+          </div>
+          <div class="settings-row focusable">
+            <div>
+              <div class="settings-row-label">Spatial Navigation Platform</div>
+              <div class="settings-row-sub">LG webOS D-Pad & Magic Remote Ready</div>
+            </div>
+            <div class="settings-input-pill">Certified</div>
+          </div>
+        `
+      };
+
+      DOM.settingsPanelContent.innerHTML = panels[tab] || '';
+      document.querySelectorAll('.settings-tab-btn').forEach((btn, idx) => {
+        btn.classList.toggle('selected', SETTINGS_TABS[idx] === tab);
+      });
+    }
+
+    // --- SPATIAL NAVIGATION FOCUS MANAGEMENT ---
+    function removeAllFocus() {
+      document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
+    }
+
+    function applyFocus() {
+      removeAllFocus();
+
+      if (STATE.mode === 'MAIN') {
+        if (STATE.zone === 'NAV') {
+          const navItems = DOM.navBar.querySelectorAll('.nav-item');
+          const target = navItems[STATE.navIndex];
+          if (target) {
+            target.classList.add('focused');
+            scrollCanvasTo(0);
+          }
+        } else if (STATE.zone === 'HERO') {
+          const heroBtns = [DOM.hero.playBtn, DOM.hero.detailsBtn];
+          const target = heroBtns[STATE.heroIndex];
+          if (target) {
+            target.classList.add('focused');
+            scrollCanvasTo(0);
+          }
+        } else if (STATE.zone === 'RAILS') {
+          const card = document.querySelector(`.card[data-rail="${STATE.activeRail}"][data-card="${STATE.activeCardByRail[STATE.activeRail]}"]`);
+          if (card) {
+            card.classList.add('focused');
+            centerCard(STATE.activeRail, STATE.activeCardByRail[STATE.activeRail]);
+            scrollCanvasTo(280 + (STATE.activeRail * 380));
+            const media = STATE.railsData[STATE.activeRail].items[STATE.activeCardByRail[STATE.activeRail]];
+            updateAmbientAndHero(media);
+          }
+        }
+      } else if (STATE.mode === 'SETTINGS') {
+        if (STATE.settingsFocusArea === 'SIDEBAR') {
+          const tabBtns = document.querySelectorAll('.settings-tab-btn');
+          if (tabBtns[STATE.settingsSideIndex]) {
+            tabBtns[STATE.settingsSideIndex].classList.add('focused');
+          }
+        } else {
+          const rows = DOM.settingsPanelContent.querySelectorAll('.settings-row');
+          if (rows[STATE.settingsPaneIndex]) {
+            rows[STATE.settingsPaneIndex].classList.add('focused');
+          }
+        }
+      } else if (STATE.mode === 'MODAL') {
+        const modalBtns = [DOM.modal.playBtn, DOM.modal.trailerBtn, DOM.modal.bookmarkBtn, DOM.modal.closeBtn];
+        if (modalBtns[STATE.modalBtnIndex]) {
+          modalBtns[STATE.modalBtnIndex].classList.add('focused');
+        }
+      } else if (STATE.mode === 'PLAYER') {
+        const btn = DOM.player.buttons[STATE.playerBtnIndex];
+        if (btn) btn.classList.add('focused');
+      }
+    }
+
+    function centerCard(railIdx, cardIdx) {
+      const track = document.getElementById(`track-${railIdx}`);
+      if (!track) return;
+      const cards = track.querySelectorAll('.card');
+      const target = cards[cardIdx];
+      if (!target) return;
+      const offset = cardIdx * (target.offsetWidth + 28);
+      track.style.transform = `translate3d(-${offset}px, 0, 0)`;
+    }
+
+    function scrollCanvasTo(y) {
+      DOM.canvas.style.transform = `translate3d(0, -${y}px, 0)`;
+    }
+
+    // --- MODAL CONTROLLER ---
+    function openModal(media) {
+      const item = media || STATE.activeMedia;
+      DOM.modal.title.textContent = item.title;
+      DOM.modal.overview.textContent = item.overview;
+      DOM.modal.rating.textContent = `★ ${item.rating}`;
+      DOM.modal.year.textContent = item.year;
+      DOM.modal.duration.textContent = item.duration || '2h 15m';
+      DOM.modal.art.style.backgroundImage = `url('${item.backdrop}')`;
+
+      STATE.mode = 'MODAL';
+      STATE.modalBtnIndex = 0;
+      DOM.modal.overlay.classList.add('active');
+      applyFocus();
+    }
+
+    function closeModal() {
+      DOM.modal.overlay.classList.remove('active');
+      STATE.mode = 'MAIN';
+      applyFocus();
+    }
+
+    // --- STREAM RESOLVER & VIDEO PLAYER ---
+    let hudTimer = null;
+
+    async function startStreamPlayback(media) {
+      const item = media || STATE.activeMedia;
+      showToast(`Resolving stream for ${item.title}...`);
+
+      if (STATE.mode === 'MODAL') closeModal();
+
+      try {
+        const res = await fetch(`${CONFIG.BACKEND_URL}/api/resolve?title=${encodeURIComponent(item.title)}&year=${item.year}&tmdbId=${item.id}`);
+        const data = await res.json();
+        const streamUrl = data.stream ? data.stream.url : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
+        
+        DOM.player.title.textContent = item.title;
+        DOM.player.badge.textContent = data.stream ? data.stream.quality : '1080p Direct';
+        DOM.player.video.src = streamUrl;
+
+        STATE.mode = 'PLAYER';
+        STATE.playerBtnIndex = 1; // Focus Play/Pause
+        DOM.player.overlay.classList.add('active');
+        DOM.player.video.currentTime = 0;
+        DOM.player.video.play().catch(e => console.warn(e));
+        updatePlayPauseIcon(true);
+
+        showPlayerHud();
+        applyFocus();
+      } catch (err) {
+        showToast("Backend resolver unreachable. Starting offline sample.");
+        DOM.player.video.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
+        STATE.mode = 'PLAYER';
+        DOM.player.overlay.classList.add('active');
+        DOM.player.video.play().catch(e => console.warn(e));
+        applyFocus();
+      }
+    }
+
+    function stopPlayer() {
+      DOM.player.video.pause();
+      DOM.player.overlay.classList.remove('active');
+      STATE.mode = 'MAIN';
+      applyFocus();
+    }
+
+    function togglePlayPause() {
+      if (DOM.player.video.paused) {
+        DOM.player.video.play();
+        updatePlayPauseIcon(true);
+        showToast("Playing");
+      } else {
+        DOM.player.video.pause();
+        updatePlayPauseIcon(false);
+        showToast("Paused");
+      }
+      showPlayerHud();
+    }
+
+    function updatePlayPauseIcon(isPlaying) {
+      DOM.player.playIcon.innerHTML = isPlaying 
+        ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' 
+        : '<path d="M8 5v14l11-7z"/>';
+    }
+
+    function showPlayerHud() {
+      DOM.player.hud.classList.remove('hidden');
+      clearTimeout(hudTimer);
+      hudTimer = setTimeout(() => {
+        if (!DOM.player.video.paused && STATE.mode === 'PLAYER') {
+          DOM.player.hud.classList.add('hidden');
+        }
+      }, 4000);
+    }
+
+    DOM.player.video.addEventListener('timeupdate', () => {
+      const cur = DOM.player.video.currentTime;
+      const dur = DOM.player.video.duration || 1;
+      DOM.player.progressFill.style.width = `${(cur / dur) * 100}%`;
+      DOM.player.curTime.textContent = formatTime(cur);
+      DOM.player.duration.textContent = formatTime(dur);
+    });
+
+    function formatTime(s) {
+      if (isNaN(s)) return "00:00";
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m < 10 ? '0' : ''}${m}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    // --- KEYBOARD & WEBOS REMOTE DISPATCHER ---
+    window.addEventListener('keydown', (e) => {
+      const key = e.keyCode;
+
+      // LG webOS Media Keys
+      if (key === 415) { // Play
+        if (STATE.mode === 'PLAYER') { DOM.player.video.play(); updatePlayPauseIcon(true); }
+        return;
+      }
+      if (key === 19 || key === 413) { // Pause / Stop
+        if (STATE.mode === 'PLAYER') { DOM.player.video.pause(); updatePlayPauseIcon(false); }
+        return;
+      }
+
+      // Back Key (webOS: 461, Standard: 27 / 8)
+      if (key === 461 || key === 27 || key === 8) {
+        if (STATE.mode === 'PLAYER') {
+          stopPlayer();
+        } else if (STATE.mode === 'MODAL') {
+          closeModal();
+        } else if (STATE.mode === 'SETTINGS') {
+          DOM.settingsOverlay.classList.remove('active');
+          STATE.mode = 'MAIN';
+          STATE.zone = 'NAV';
+          applyFocus();
+        } else if (STATE.mode === 'MAIN') {
+          if (STATE.zone !== 'NAV') {
+            STATE.zone = 'NAV';
+            applyFocus();
+          } else {
+            showToast("Press Home button on LG Magic Remote to return to webOS");
+          }
+        }
+        return;
+      }
+
+      // Dispatch by mode
+      if (STATE.mode === 'SETTINGS') {
+        handleSettingsKey(key);
+      } else if (STATE.mode === 'MODAL') {
+        handleModalKey(key);
+      } else if (STATE.mode === 'PLAYER') {
+        handlePlayerKey(key);
+      } else if (STATE.mode === 'MAIN') {
+        handleMainKey(key);
+      }
+    });
+
+    // Main Mode D-Pad Handling
+    function handleMainKey(k) {
+      switch (k) {
+        case 38: // UP
+          if (STATE.zone === 'RAILS') {
+            if (STATE.activeRail > 0) {
+              STATE.activeRail--;
+            } else {
+              STATE.zone = 'HERO';
+              STATE.heroIndex = 0;
+            }
+          } else if (STATE.zone === 'HERO') {
+            STATE.zone = 'NAV';
+          }
+          applyFocus();
+          break;
+
+        case 40: // DOWN
+          if (STATE.zone === 'NAV') {
+            STATE.zone = 'HERO';
+            STATE.heroIndex = 0;
+          } else if (STATE.zone === 'HERO') {
+            STATE.zone = 'RAILS';
+            STATE.activeRail = 0;
+          } else if (STATE.zone === 'RAILS') {
+            if (STATE.activeRail < STATE.railsData.length - 1) {
+              STATE.activeRail++;
+            }
+          }
+          applyFocus();
+          break;
+
+        case 37: // LEFT
+          if (STATE.zone === 'NAV') {
+            if (STATE.navIndex > 0) STATE.navIndex--;
+          } else if (STATE.zone === 'HERO') {
+            if (STATE.heroIndex > 0) STATE.heroIndex--;
+          } else if (STATE.zone === 'RAILS') {
+            const cur = STATE.activeCardByRail[STATE.activeRail] || 0;
+            if (cur > 0) STATE.activeCardByRail[STATE.activeRail] = cur - 1;
+          }
+          applyFocus();
+          break;
+
+        case 39: // RIGHT
+          if (STATE.zone === 'NAV') {
+            const navItems = DOM.navBar.querySelectorAll('.nav-item');
+            if (STATE.navIndex < navItems.length - 1) STATE.navIndex++;
+          } else if (STATE.zone === 'HERO') {
+            if (STATE.heroIndex < 1) STATE.heroIndex++;
+          } else if (STATE.zone === 'RAILS') {
+            const cur = STATE.activeCardByRail[STATE.activeRail] || 0;
+            const len = STATE.railsData[STATE.activeRail].items.length;
+            if (cur < len - 1) STATE.activeCardByRail[STATE.activeRail] = cur + 1;
+          }
+          applyFocus();
+          break;
+
+        case 13: // OK / ENTER
+          if (STATE.zone === 'NAV') {
+            const navs = DOM.navBar.querySelectorAll('.nav-item');
+            const target = navs[STATE.navIndex].dataset.nav;
+            if (target === 'settings') {
+              STATE.mode = 'SETTINGS';
+              STATE.settingsFocusArea = 'SIDEBAR';
+              STATE.settingsSideIndex = 0;
+              renderSettingsPanel(SETTINGS_TABS[0]);
+              DOM.settingsOverlay.classList.add('active');
+            } else {
+              showToast(`Navigated to ${target.toUpperCase()}`);
+            }
+          } else if (STATE.zone === 'HERO') {
+            if (STATE.heroIndex === 0) startStreamPlayback(STATE.activeMedia);
+            else openModal(STATE.activeMedia);
+          } else if (STATE.zone === 'RAILS') {
+            const media = STATE.railsData[STATE.activeRail].items[STATE.activeCardByRail[STATE.activeRail]];
+            openModal(media);
+          }
+          applyFocus();
+          break;
+      }
+    }
+
+    // Settings Mode D-Pad Handling
+    function handleSettingsKey(k) {
+      if (STATE.settingsFocusArea === 'SIDEBAR') {
+        if (k === 38) { // UP
+          if (STATE.settingsSideIndex > 0) {
+            STATE.settingsSideIndex--;
+            renderSettingsPanel(SETTINGS_TABS[STATE.settingsSideIndex]);
+            applyFocus();
+          }
+        } else if (k === 40) { // DOWN
+          if (STATE.settingsSideIndex < SETTINGS_TABS.length - 1) {
+            STATE.settingsSideIndex++;
+            renderSettingsPanel(SETTINGS_TABS[STATE.settingsSideIndex]);
+            applyFocus();
+          }
+        } else if (k === 39) { // RIGHT
+          STATE.settingsFocusArea = 'PANE';
+          STATE.settingsPaneIndex = 0;
+          applyFocus();
+        }
+      } else if (STATE.settingsFocusArea === 'PANE') {
+        const rows = DOM.settingsPanelContent.querySelectorAll('.settings-row');
+        if (k === 38) { // UP
+          if (STATE.settingsPaneIndex > 0) {
+            STATE.settingsPaneIndex--;
+            applyFocus();
+          }
+        } else if (k === 40) { // DOWN
+          if (STATE.settingsPaneIndex < rows.length - 1) {
+            STATE.settingsPaneIndex++;
+            applyFocus();
+          }
+        } else if (k === 37) { // LEFT
+          STATE.settingsFocusArea = 'SIDEBAR';
+          applyFocus();
+        } else if (k === 13) { // ENTER
+          showToast("Preference updated");
+        }
+      }
+    }
+
+    // Modal Mode D-Pad Handling
+    function handleModalKey(k) {
+      if (k === 37 && STATE.modalBtnIndex > 0) {
+        STATE.modalBtnIndex--;
+        applyFocus();
+      } else if (k === 39 && STATE.modalBtnIndex < 3) {
+        STATE.modalBtnIndex++;
+        applyFocus();
+      } else if (k === 13) {
+        if (STATE.modalBtnIndex === 0) startStreamPlayback(STATE.activeMedia);
+        else if (STATE.modalBtnIndex === 1) { showToast("Playing Teaser Trailer"); startStreamPlayback(STATE.activeMedia); }
+        else if (STATE.modalBtnIndex === 2) showToast("Saved to Watchlist");
+        else closeModal();
+      }
+    }
+
+    // Player Mode D-Pad Handling
+    function handlePlayerKey(k) {
+      showPlayerHud();
+      if (k === 37) { // Left
+        if (STATE.playerBtnIndex > 0) {
+          STATE.playerBtnIndex--;
+          applyFocus();
+        } else {
+          DOM.player.video.currentTime = Math.max(0, DOM.player.video.currentTime - 15);
+          showToast("-15s");
+        }
+      } else if (k === 39) { // Right
+        if (STATE.playerBtnIndex < DOM.player.buttons.length - 1) {
+          STATE.playerBtnIndex++;
+          applyFocus();
+        } else {
+          DOM.player.video.currentTime = Math.min(DOM.player.video.duration, DOM.player.video.currentTime + 15);
+          showToast("+15s");
+        }
+      } else if (k === 13) { // OK
+        if (STATE.playerBtnIndex === 0) {
+          DOM.player.video.currentTime = Math.max(0, DOM.player.video.currentTime - 15);
+        } else if (STATE.playerBtnIndex === 1) {
+          togglePlayPause();
+        } else if (STATE.playerBtnIndex === 2) {
+          DOM.player.video.currentTime = Math.min(DOM.player.video.duration, DOM.player.video.currentTime + 15);
+        } else if (STATE.playerBtnIndex === 3) {
+          showToast("Audio Stream: Master 5.1 TrueHD");
+        } else if (STATE.playerBtnIndex === 4) {
+          stopPlayer();
+        }
+      }
+    }
+
+    // Start App
+    window.addEventListener('DOMContentLoaded', loadCatalog);
+  </script>
+</body>
+</html>
